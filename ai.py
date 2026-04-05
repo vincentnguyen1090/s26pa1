@@ -29,7 +29,11 @@ class AI:
         elif self.type == "bfs":
             self.frontier = deque([self.grid.start])
         elif self.type == "ucs":
-            pass
+            # we will keep the smallest node at the top
+            self.frontier = []
+            # push (cost, node)
+            heappush(self.frontier, (0, self.grid.start))
+            self.cost = {self.grid.start: 0}
         elif self.type == "astar":
             pass
 
@@ -143,8 +147,47 @@ class AI:
     # TODO: Implement UCS here (Don't forget to implement initialization in set_search function)
     # Hint: You can use heappop and heappush from the heapq library (imported for you above)
     def ucs_step(self):
-        self.failed = True
-        self.finished = True
+        # If nothing left to explore, no path found
+        if not self.frontier:
+            self.failed = True
+            self.finished = True
+            print("no path")
+            return
+        # cost to get to this node | current_node
+        cost, current = heappop(self.frontier)
+        
+        # Skip outdated heap entries -> we've already found cheaper path to this node
+        if cost > self.cost[current]:
+            return
+        
+        if current == self.grid.goal:
+            self.finished = True
+            self.final_cost = cost
+            return
+            
+        
+        # create all neighboring positions
+        children = [(current[0] + a[0], current[1] + a[1]) for a in ACTIONS]
+        self.grid.nodes[current].color_checked = True    # mark current node as explored
+        self.grid.nodes[current].color_frontier = False  # mark colored as a frontier node
+        
+        for n in children:
+            # Check if chid within boundaries
+            if n[0] in range(self.grid.row_range) and n[1] in range(
+                self.grid.col_range
+            ):
+                if self.grid.nodes[n].puddle:
+                        continue
+                
+                new_cost = cost + 1
+                
+                # 1. Never seen this node before (take this path) OR 
+                # 2. We have seen this node, check if there's a cheaper path
+                if n not in self.cost or new_cost < self.cost[n]:
+                    self.cost[n] = new_cost                     # Update new cost for this node
+                    heappush(self.frontier, (new_cost, n))      # Push new_cost, node into min_heap
+                    self.previous[n] = current                  # Keep track of parent node -> reconstuct path later
+                    self.grid.nodes[n].color_frontier = True    # Mark child as added to frontier
 
     # TODO: Implement Astar here (Don't forget to implement initialization in set_search function)
     # Hint: You can use heappop and heappush from the heapq library (imported for you above)
