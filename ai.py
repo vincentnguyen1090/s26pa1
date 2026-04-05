@@ -28,11 +28,11 @@ class AI:
             self.explored = []
         elif self.type == "bfs":
             self.frontier = deque([self.grid.start])
+            self.explored = []
         elif self.type == "ucs":
-            # we will keep the smallest node at the top
-            self.frontier = []
-            # push (cost, node)
-            heappush(self.frontier, (0, self.grid.start))
+            self.frontier = []  # we will keep the smallest node at the top
+            heappush(self.frontier, (0, self.grid.start)) # push (cost, node)
+            self.explored = []
             self.cost = {self.grid.start: 0}
         elif self.type == "astar":
             pass
@@ -76,6 +76,8 @@ class AI:
             return
         # Popping last-added node from the stack
         current = self.frontier.pop()
+        
+        self.explored.append(current)
 
         # Finishes search if we've found the goal.
         if current == self.grid.goal:
@@ -114,6 +116,8 @@ class AI:
             return
         # popping the first node in queue
         current = self.frontier.popleft()
+        
+        self.explored.append(current)
         
          # Finishes search if we've found the goal.
         if current == self.grid.goal:
@@ -160,6 +164,8 @@ class AI:
         if cost > self.cost[current]:
             return
         
+        self.explored.append(current)
+        
         if current == self.grid.goal:
             self.finished = True
             self.final_cost = cost
@@ -179,7 +185,7 @@ class AI:
                 if self.grid.nodes[n].puddle:
                         continue
                 
-                new_cost = cost + 1
+                new_cost = cost + self.grid.nodes[n].cost()
                 
                 # 1. Never seen this node before (take this path) OR 
                 # 2. We have seen this node, check if there's a cheaper path
